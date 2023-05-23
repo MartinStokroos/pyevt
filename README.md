@@ -1,5 +1,5 @@
 # pyevt - Python package for the Event Exchanger v2 USB hardware
-This repository contains the code to communicate with the *EventExchanger* hardware developed by the Research Support group of the faculty Bahavioral and Social Science from the University of Groningen. This code was originally written by Eise Hoekstra and Mark M. Span and now maintained by Martin Stokroos and Mark M. Span
+This repository contains the code to communicate with the *EventExchanger* hardware developed by the Research Support group of the faculty of Behavioral and Social Science from the University of Groningen. This code was originally written by Eise Hoekstra and Mark M. Span and now maintained by Martin Stokroos and Mark M. Span
 
 ## Purpose
 This is a Python module to communicate with the *EventExchanger v2* hardware and *EventExchanger* hardware derivatives.
