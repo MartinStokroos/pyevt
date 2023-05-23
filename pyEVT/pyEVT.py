@@ -85,12 +85,12 @@ class EvtExchanger:
 			return self.__AxisValue
 		self.__AxisValue = valueList[1] + (256*valueList[2])
 		
-		return self.__AxisValue  
+		return self.__AxisValue
+	
+
 	'''
 		Functions that only require a single USB command to be sent to the device.
 	'''
-
-
 	def SetLines(self, OutValue):
 		self.SelectedDevice.write([ 0, self.__SETOUTPUTLINES, OutValue, 0, 0, 0, 0, 0, 0, 0, 0 ])
 		
@@ -117,8 +117,12 @@ class EvtExchanger:
 		self.SelectedDevice.write([ 0, self.__SETWS2811RGBLEDCOLOR, RedValue, GreenValue, BlueValue, LedNumber, Mode, 0, 0, 0, 0 ])
 		
 
-	def SendColors(self, NumberOfLeds,Mode):
+	def SendColors(self, NumberOfLeds, Mode):
 		self.SelectedDevice.write([ 0, self.__SENDLEDCOLORS, NumberOfLeds, Mode, 0, 0, 0, 0, 0, 0, 0 ])
+
+	def Reset(self):
+		self.SelectedDevice.write([ 0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0 ])
+
    
 	__AxisValue = 0
 	
@@ -156,6 +160,8 @@ class EvtExchanger:
 
 	__SWITCHDIAGNOSTICMODE = 200   # 0xC8
 	__SWITCHEVENTTEST = 201   # 0xC9
+
+	__RESET = 255	# 0xFF
 
 #-*- coding:utf-8 -*-
 
