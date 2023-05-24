@@ -1,8 +1,6 @@
 #-*- coding:utf-8 -*-
 
-"""
-	Python module for EVT2 devices.
-"""
+'Python module for EVT2 devices.'
 
 from libopensesame.oslogging import oslogger
 import hid
@@ -14,9 +12,7 @@ import time
 
 
 class EvtExchanger:
-	"""
-	This class is for communication with EVT2 devices.
-	"""
+	"""This class is to communicate with EVT2 devices."""
 	SelectedDevice = None
 	ListOfDevices = []
 	Path = []
@@ -28,10 +24,11 @@ class EvtExchanger:
 			#raise Exception('EventExchanger (LibUSB) Initialisation Error')
 
 	def Attached(self, matchingkey = "EventExchanger"):
-        """Attach EVT hardware.
-
-        :param matchingkey: attaches the available EVT2 device containing the string "EventExchanger".
-        """
+		"""Attach EVT hardware.
+        
+            Parameters:
+                matchingkey (string): attaches the available EVT2 device containing the string "EventExchanger".
+    	"""
 		self.SelectedDevice = hid.device()
 		self.ListOfDevices = []
 		self.Path = None
@@ -48,10 +45,11 @@ class EvtExchanger:
 
 
 	def Select(self, deviceName):
-        """Select device.
-
-        :param deviceName: select the device with string containing "name".
-        """
+		"""Select device.
+        
+            Parameters:
+                deviceName (string): select the device with string containing "device name".
+		"""
 		self.Attached(deviceName)
 		if type(self.Path) == bytes:
 			self.SelectedDevice.close()
@@ -63,11 +61,14 @@ class EvtExchanger:
 	
 
 	def WaitForDigEvents(self, AllowedEventLines, TimeoutMSecs):
-        """Wait for incoming digital events based on polling.
+		"""Wait for incoming digital events based on polling.
 
-        :param AllowedEventLines: bit mask [0-255] to select the digital input lines.
-        :param TimeoutMSecs: timeout period in ms
-        """
+			Parameters:
+				AllowedEventLines: bit mask [0-255] to select the digital input lines.
+				TimeoutMSecs: timeout period in ms
+   
+			Returns:
+		"""
 		# flush the buffer!
 		while (self.SelectedDevice.read(1) != []):
 			continue
@@ -90,7 +91,11 @@ class EvtExchanger:
 		return lastbtn[0], round(1000.0 * ElapsedSecs)
 		
 	def GetAxis(self, ):
-        """GetAxis data.
+		"""GetAxis data.
+        
+            Parameters: -
+            
+            Returns: 
 
         """
 		while (self.SelectedDevice.read(1) != []):
@@ -106,79 +111,86 @@ class EvtExchanger:
 
 	# Functions that only require a single USB command to be sent to the device.
 	def SetLines(self, OutValue):
-        """Set output lines.
-
-        :param OutValue: bit pattern [0-255] to set the digital output lines.
-        """
+		"""Set output lines.
+        
+        	Parameters:
+        		OutValue: bit pattern [0-255] to set the digital output lines.
+		"""
 		self.SelectedDevice.write([ 0, self.__SETOUTPUTLINES, OutValue, 0, 0, 0, 0, 0, 0, 0, 0 ])
 		
 
 	def PulseLines(self, OutValue, DurationInMillisecs):
-        """Pulse output lines.
+		"""Pulse output lines.
 
-        :param OutValue: bit pattern [0-255] to pulse the digital output lines.
-        :param DurationInMillisecs: sets the duration of the pulse.
-        """
+            Parameters:
+                OutValue: bit pattern [0-255] to pulse the digital output lines.
+                DurationInMillisecs: sets the duration of the pulse.
+		"""
 		self.SelectedDevice.write([ 0, self.__PULSEOUTPUTLINES, OutValue, DurationInMillisecs & 255, DurationInMillisecs >> 8, 0, 0, 0, 0, 0, 0])
 			  
 
 	def SetAnalogEventStepSize(self, NumberOfSamplesPerStep):
-        """Set analog event step size.
-
-        :param NumberOfSamplesPerStep: set the number of samples per step.
-        """
+		"""Set analog event step size.
+        
+            Parameters:
+                NumberOfSamplesPerStep: set the number of samples per step.
+		"""
 		self.SelectedDevice.write([ 0, self.__SETANALOGEVENTSTEPSIZE, NumberOfSamplesPerStep, 0, 0, 0, 0, 0, 0, 0, 0 ])
 
 
 	def RENC_SetUp(self, Range, MinimumValue, Position, InputChange, PulseInputDivider):
-        """Rotary Encoder setup.
-
-        :param Range:
-        :param MinumumValue:
-        :param Position:
-        :param InputChange:
-        :param PulseInputDivider:
-        """
+		"""Rotary Encoder setup.
+        
+            Parameters:
+                Range:
+                MinumumValue:
+                Position:
+                InputChange:
+                PulseInputDivider:
+		"""
 		self.__AxisValue = Position
 		self.SelectedDevice.write([ 0, self.__SETUPROTARYCONTROLLER, Range & 255, Range >> 8, MinimumValue & 255 , MinimumValue >> 8, Position & 255, Position >> 8, InputChange, PulseInputDivider, 0])
 	
 
 	def RENC_SetPosition(self, Position):
-        """Rotary Encoder set position.
+		"""Rotary Encoder set position.
 
-        :param Position: Set the current position.
-        """
+            Parameters:
+                Position: Set the current position.
+		"""
 		self.__AxisValue = Position
 		self.SelectedDevice.write([ 0, self.__SETROTARYCONTROLLERPOSITION, Position & 255, Position >> 8, 0, 0, 0, 0, 0, 0, 0])
 		
   
 	def SetLedColor(self, RedValue, GreenValue, BlueValue, LedNumber, Mode):
-        """Set LED color.
+		"""Set LED color.
 
-        :param RedValue:
-        :param GreenValue:
-        :param BlueValue:
-        :param LedNumber:
-        :param Mode:
+            Parameters:
+                RedValue:
+                GreenValue:
+                BlueValue:
+                LedNumber:
+                Mode:
         """
 		self.SelectedDevice.write([ 0, self.__SETWS2811RGBLEDCOLOR, RedValue, GreenValue, BlueValue, LedNumber, Mode, 0, 0, 0, 0 ])
 		
 
 	def SendColors(self, NumberOfLeds, Mode):
-        """Set LED color.
-
-        :param RedValue:
-        :param GreenValue:
-        :param BlueValue:
-        :param LedNumber:
-        :param Mode:
+		"""Set LED color.
+        
+            Parameters:
+                RedValue:
+                GreenValue:
+                BlueValue:
+                LedNumber:
+                Mode:
         """
 		self.SelectedDevice.write([ 0, self.__SENDLEDCOLORS, NumberOfLeds, Mode, 0, 0, 0, 0, 0, 0, 0 ])
 
 	def Reset(self):
-        """Reset EVT device. WARNING! Will disconnect the USB connection.
+		"""Reset EVT device. WARNING! Will disconnect the USB.
         
-        """
+		"""
 		self.SelectedDevice.write([ 0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0 ])
 
    
