@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 
 'Python module for EVT2 devices.'
+__version__ = "0.1.0"
 
 from libopensesame.oslogging import oslogger
 import hid
