@@ -3,7 +3,6 @@
 'Python module for EVT2 devices.'
 __version__ = "0.1.0"
 
-from libopensesame.oslogging import oslogger
 import hid
 import sys
 from types import *
@@ -23,6 +22,7 @@ class EvtExchanger:
 		except Exception as e:
 			raise(e)
 			#raise Exception('EventExchanger (LibUSB) Initialisation Error')
+
 
 	def Attached(self, matchingkey = "EventExchanger"):
 		"""Attach EVT hardware.
