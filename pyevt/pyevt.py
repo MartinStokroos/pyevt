@@ -1,8 +1,5 @@
 #-*- coding:utf-8 -*-
 
-'Python module for EVT2 devices.'
-__version__ = "0.1.0"
-
 import hid
 import sys
 from types import *
