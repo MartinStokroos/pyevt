@@ -1,4 +1,4 @@
-# pyEVT - Python package for the Event Exchanger EVT-2 USB hardware
+# pyevt - A python package for the Event Exchanger EVT-2 USB hardware
 This repository contains the code to communicate with the *EVT-2* USB devices developed by the Research Support group of the faculty of Behavioral and Social Science from the University of Groningen. This code was originally written by Eise Hoekstra and Mark M. Span and is now maintained by Martin Stokroos and Mark M. Span
 
 ## Purpose
@@ -13,4 +13,5 @@ https://pypi.org/project/hidapi/
 ## Usage:
 Install pyevt with:
 
-`pip install pyevt`
+`pip install pyevt` or
+`pip install --user pyevt` on managed computers.
