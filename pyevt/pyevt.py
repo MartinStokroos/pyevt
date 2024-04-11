@@ -1,17 +1,17 @@
 #-*- coding:utf-8 -*-
 
 import hid
-import sys
+#import sys
 from types import *
-import os
-import ctypes
+#import os
+#import ctypes
 import time
 
-
 class EvtExchanger:
-	"""This class is to communicate with EVT2 devices."""
-	SelectedDevice = None
-	ListOfDevices = []
+	"""This class is to communicate with EVTx devices."""
+
+	selectedDevice = None
+	listOfDevices = []
 	Path = []
 	def __init__(self):
 		try:
@@ -22,84 +22,86 @@ class EvtExchanger:
 
 
 	def Attached(self, matchingkey = "EventExchanger"):
-		"""Attach EVT hardware.
+		"""
+		Attach EVT hardware.
         
-            Parameters:
-                matchingkey (string): attaches the available EVT2 device containing the string "EventExchanger".
+        Parameters:
+            matchingkey (string): attaches the available EVT2 device containing 
+		    the string "EventExchanger".
     	"""
-		self.SelectedDevice = hid.device()
-		self.ListOfDevices = []
+		self.selectedDevice = hid.device()
+		self.listOfDevices = []
 		self.Path = None
-		self.SelectedDevice.close()
+		self.selectedDevice.close()
 		for d in hid.enumerate():
 			longname = d["product_string"] + " SN## " + d["serial_number"]
 			if matchingkey in longname:
-				if self.ListOfDevices == []:
+				if self.listOfDevices == []:
 					self.Path = d['path']
-					self.SelectedDevice.open_path(self.Path)
-					self.SelectedDevice.set_nonblocking(True)
-				self.ListOfDevices.append(longname)
-		return (self.ListOfDevices)
-
+					self.selectedDevice.open_path(self.Path)
+					self.selectedDevice.set_nonblocking(True)
+				self.listOfDevices.append(longname)
+		return (self.listOfDevices)
 
 	def Select(self, deviceName):
-		"""Select device.
+		"""
+		Select device.
         
-            Parameters:
-                deviceName (string): select the device with string containing "device name".
+        Parameters:
+            deviceName (string): select the device with string containing "device name".
 		"""
 		self.Attached(deviceName)
 		if type(self.Path) == bytes:
-			self.SelectedDevice.close()
-			self.SelectedDevice.open_path(self.Path)
-			self.SelectedDevice.set_nonblocking(True)
+			self.selectedDevice.close()
+			self.selectedDevice.open_path(self.Path)
+			self.selectedDevice.set_nonblocking(True)
 		else:
-			self.SelectedDevice = None
-		return self.SelectedDevice
+			self.selectedDevice = None
+		return self.selectedDevice
 	
 
 	def WaitForDigEvents(self, AllowedEventLines, TimeoutMSecs):
-		"""Wait for incoming digital events based on polling.
+		"""
+		Wait for incoming digital events based on polling.
 
-			Parameters:
-				AllowedEventLines: bit mask [0-255] to select the digital input lines.
-				TimeoutMSecs: timeout period in ms
-   
-			Returns:
+		Parameters:
+		    AllowedEventLines: bit mask [0-255] to select the digital input lines.
+		    TimeoutMSecs: timeout period in ms
+   		Returns:
 		"""
 		# flush the buffer!
-		while (self.SelectedDevice.read(1) != []):
+		while (self.selectedDevice.read(1) != []):
 			continue
 			
 		TimeoutSecs = TimeoutMSecs / 1000
 		startTime = time.time()		
 		
 		while 1:
-			ElapsedSecs = (time.time()-startTime)
-			lastbtn = self.SelectedDevice.read(1)		   
-			if (lastbtn != []):
-				if (lastbtn[0] & AllowedEventLines > 0):
+			elapsedSecs = (time.time()-startTime)
+			lastButton = self.selectedDevice.read(1)		   
+			if (lastButton != []):
+				if (lastButton[0] & AllowedEventLines > 0):
 					break
 			# break for timeout:
 			if (TimeoutMSecs != -1):
-				if (ElapsedSecs >= (TimeoutSecs)):
-					lastbtn = [-1]
-					ElapsedSecs = TimeoutSecs
+				if (elapsedSecs >= (TimeoutSecs)):
+					lastButton = [-1]
+					elapsedSecs = TimeoutSecs
 					break
-		return lastbtn[0], round(1000.0 * ElapsedSecs)
+		return lastButton[0], round(1000.0 * elapsedSecs)
 		
 	def GetAxis(self, ):
-		"""GetAxis data.
+		"""
+		GetAxis data.
         
-            Parameters: -
+        Parameters: -
             
-            Returns: 
-
+        Returns: 
         """
-		while (self.SelectedDevice.read(1) != []):
+		while (self.selectedDevice.read(1) != []):
 			pass
 		time.sleep(.01)
-		valueList = self.SelectedDevice.read(3)   
+		valueList = self.selectedDevice.read(3)   
 		if (valueList == []):
 			return self.__AxisValue
 		self.__AxisValue = valueList[1] + (256*valueList[2])
@@ -108,88 +110,93 @@ class EvtExchanger:
 	
 
 	# Functions that only require a single USB command to be sent to the device.
-	def SetLines(self, OutValue):
-		"""Set output lines.
-        
-        	Parameters:
-        		OutValue: bit pattern [0-255] to set the digital output lines.
+	def SetLines(self, outValue):
 		"""
-		self.SelectedDevice.write([ 0, self.__SETOUTPUTLINES, OutValue, 0, 0, 0, 0, 0, 0, 0, 0 ])
+		Set output lines.
+        
+        Parameters:
+            outValue: bit pattern [0-255] to set the digital output lines.
+		"""
+		self.selectedDevice.write([ 0, self.__SETOUTPUTLINES, outValue, 0, 0, 0, 0, 0, 0, 0, 0 ])
 		
 
-	def PulseLines(self, OutValue, DurationInMillisecs):
-		"""Pulse output lines.
-
-            Parameters:
-                OutValue: bit pattern [0-255] to pulse the digital output lines.
-                DurationInMillisecs: sets the duration of the pulse.
+	def PulseLines(self, outValue, durationInMillisecs):
 		"""
-		self.SelectedDevice.write([ 0, self.__PULSEOUTPUTLINES, OutValue, DurationInMillisecs & 255, DurationInMillisecs >> 8, 0, 0, 0, 0, 0, 0])
+		Pulse output lines.
+
+        Parameters:
+            outValue: bit pattern [0-255] to pulse the digital output lines.
+            durationInMillisecs: sets the duration of the pulse.
+		"""
+		self.selectedDevice.write([ 0, self.__PULSEOUTPUTLINES, outValue, durationInMillisecs & 255, durationInMillisecs >> 8, 0, 0, 0, 0, 0, 0])
 			  
 
-	def SetAnalogEventStepSize(self, NumberOfSamplesPerStep):
-		"""Set analog event step size.
-        
-            Parameters:
-                NumberOfSamplesPerStep: set the number of samples per step.
+	def SetAnalogEventStepSize(self, numberOfSamplesPerStep):
 		"""
-		self.SelectedDevice.write([ 0, self.__SETANALOGEVENTSTEPSIZE, NumberOfSamplesPerStep, 0, 0, 0, 0, 0, 0, 0, 0 ])
+		Set analog event step size.
+        
+        Parameters:
+            numberOfSamplesPerStep: set the number of samples per step.
+		"""
+		self.selectedDevice.write([ 0, self.__SETANALOGEVENTSTEPSIZE, numberOfSamplesPerStep, 0, 0, 0, 0, 0, 0, 0, 0 ])
 
 
-	def RENC_SetUp(self, Range, MinimumValue, Position, InputChange, PulseInputDivider):
-		"""Rotary Encoder setup.
-        
-            Parameters:
-                Range:
-                MinumumValue:
-                Position:
-                InputChange:
-                PulseInputDivider:
+	def RENC_SetUp(self, encRange, minimumValue, position, inputChange, pulseInputDivider):
 		"""
-		self.__AxisValue = Position
-		self.SelectedDevice.write([ 0, self.__SETUPROTARYCONTROLLER, Range & 255, Range >> 8, MinimumValue & 255 , MinimumValue >> 8, Position & 255, Position >> 8, InputChange, PulseInputDivider, 0])
+		Rotary Encoder setup.
+        
+        Parameters:
+            encRange:
+            minumumValue:
+            position:
+            inputChange:
+            pulseInputDivider:
+		"""
+		self.__AxisValue = position
+		self.selectedDevice.write([ 0, self.__SETUPROTARYCONTROLLER, encRange & 255, encRange >> 8, minimumValue & 255 , minimumValue >> 8, position & 255, position >> 8, inputChange, pulseInputDivider, 0])
 	
 
-	def RENC_SetPosition(self, Position):
+	def RENC_Setposition(self, position):
 		"""Rotary Encoder set position.
 
             Parameters:
-                Position: Set the current position.
+                position: Set the current position.
 		"""
-		self.__AxisValue = Position
-		self.SelectedDevice.write([ 0, self.__SETROTARYCONTROLLERPOSITION, Position & 255, Position >> 8, 0, 0, 0, 0, 0, 0, 0])
+		self.__AxisValue = position
+		self.selectedDevice.write([ 0, self.__SETROTARYCONTROLLERposition, position & 255, position >> 8, 0, 0, 0, 0, 0, 0, 0])
 		
   
-	def SetLedColor(self, RedValue, GreenValue, BlueValue, LedNumber, Mode):
+	def SetLedColor(self, redValue, greenValue, blueValue, ledNumber, mode):
 		"""Set LED color.
 
-            Parameters:
-                RedValue:
-                GreenValue:
-                BlueValue:
-                LedNumber:
-                Mode:
+        Parameters:
+            redValue:
+            greenValue:
+            blueValue:
+            ledNumber:
+            mode:
         """
-		self.SelectedDevice.write([ 0, self.__SETWS2811RGBLEDCOLOR, RedValue, GreenValue, BlueValue, LedNumber, Mode, 0, 0, 0, 0 ])
+		self.selectedDevice.write([ 0, self.__SETWS2811RGBLEDCOLOR, redValue, greenValue, blueValue, ledNumber, mode, 0, 0, 0, 0 ])
 		
 
-	def SendColors(self, NumberOfLeds, Mode):
+	def SendColors(self, numberOfLeds, mode):
 		"""Set LED color.
         
-            Parameters:
-                RedValue:
-                GreenValue:
-                BlueValue:
-                LedNumber:
-                Mode:
+        Parameters:
+            redValue:
+            greenValue:
+            blueValue:
+            ledNumber:
+            mode:
         """
-		self.SelectedDevice.write([ 0, self.__SENDLEDCOLORS, NumberOfLeds, Mode, 0, 0, 0, 0, 0, 0, 0 ])
+		self.selectedDevice.write([ 0, self.__SENDLEDCOLORS, numberOfLeds, mode, 0, 0, 0, 0, 0, 0, 0 ])
 
 	def Reset(self):
-		"""Reset EVT device. WARNING! Will disconnect the USB.
+		"""
+		Reset EVT device. WARNING! Will disconnect the device from USB.
         
 		"""
-		self.SelectedDevice.write([ 0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0 ])
+		self.selectedDevice.write([ 0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0 ])
 
    
 	__AxisValue = 0
@@ -212,7 +219,7 @@ class EvtExchanger:
 	__REROUTEEVENTINPUT = 31   # 0x1F
 
 	__SETUPROTARYCONTROLLER = 40# 0x28
-	__SETROTARYCONTROLLERPOSITION = 41  # 0x29
+	__SETROTARYCONTROLLERposition = 41  # 0x29
 
 	__CONFIGUREDEBOUNCE = 50   # 0x32
 
@@ -226,7 +233,7 @@ class EvtExchanger:
 	__REROUTEANALOGINPUT = 103# 0X67
 	__SETANALOGEVENTSTEPSIZE = 104 # 0X68
 
-	__SWITCHDIAGNOSTICMODE = 200   # 0xC8
+	__SWITCHDIAGNOSTICmode = 200   # 0xC8
 	__SWITCHEVENTTEST = 201   # 0xC9
 
 	__RESET = 255	# 0xFF
