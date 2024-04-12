@@ -9,7 +9,7 @@ The *EVT-2* is an event marking and triggering device intended for physiological
 pyevt uses the *HIDAPI* python module to communicate over USB according the HID class.
 https://pypi.org/project/hidapi/
 
-## Usage:
+## Usage
 Install pyevt with:
 
 `pip install pyevt` or
