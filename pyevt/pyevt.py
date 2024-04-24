@@ -65,16 +65,15 @@ class EvtExchanger:
         Parameters:
             AllowedEventLines: bit mask [0-255] to select the
             digital input lines.
-            TimeoutMSecs: timeout period in ms
+            TimeoutMSecs: timeout period in ms. Set to None for infinite.
         Returns:
         """
         # flush the buffer!
         while (self.selectedDevice.read(1) != []):
             continue
-
-        TimeoutSecs = TimeoutMSecs / 1000
+        if isinstance(TimeoutMSecs, int):
+            TimeoutSecs = TimeoutMSecs / 1000
         startTime = time.time()
-
         while 1:
             elapsedSecs = (time.time()-startTime)
             lastButton = self.selectedDevice.read(1)
@@ -82,14 +81,14 @@ class EvtExchanger:
                 if (lastButton[0] & AllowedEventLines > 0):
                     break
             # break for timeout:
-            if (TimeoutMSecs != -1):
+            if isinstance(TimeoutMSecs, int):
                 if (elapsedSecs >= (TimeoutSecs)):
                     lastButton = [-1]
                     elapsedSecs = TimeoutSecs
                     break
         return lastButton[0], round(1000.0 * elapsedSecs)
 
-    def GetAxis(self, ):
+    def GetAxis(self):
         """
         GetAxis data.
 
