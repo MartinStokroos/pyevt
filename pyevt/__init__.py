@@ -2,4 +2,4 @@
 
 __version__ = '0.1.2'
 
-from .pyevt import EvtExchanger
+from .pyevt import EVTDeviceHandler

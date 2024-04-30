@@ -1,25 +1,19 @@
 # -*- coding:utf-8 -*-
 
 import hid
+# import sys
 from types import *
 import time
 
 
-class EvtExchanger:
+class EVTDeviceHandler:
     """This class is to communicate with EVTx devices."""
 
-    selectedDevice = None
-    listOfDevices = []
-    Path = []
+    def __init__(self, matching_key):
+        self.device = None
+        self.matching_key = matching_key
 
-    def __init__(self):
-        try:
-            self.Attached()
-        except Exception as e:
-            raise(e)
-            # raise Exception('EventExchanger (LibUSB) Initialisation Error')
-
-    def Attached(self, matchingkey="EventExchanger"):
+    def attach_device(self):
         """
         Attach EVT hardware.
 
@@ -27,38 +21,48 @@ class EvtExchanger:
             matchingkey (string): attaches the available EVT2 device containing
             the string "EventExchanger".
         """
-        self.selectedDevice = hid.device()
-        self.listOfDevices = []
-        self.Path = None
-        self.selectedDevice.close()
-        for d in hid.enumerate():
-            longname = d["product_string"] + " SN## " + d["serial_number"]
-            if matchingkey in longname:
-                if self.listOfDevices == []:
-                    self.Path = d['path']
-                    self.selectedDevice.open_path(self.Path)
-                    self.selectedDevice.set_nonblocking(True)
-                    self.listOfDevices.append(longname)
-        return (self.listOfDevices)
+        # Attempt to list all connected HID devices
+        all_devices = hid.enumerate()
 
-    def Select(self, device_name):
+        # Filter out the device by partial product name match
+        for device_info in all_devices:
+            if self.matching_key.lower() in device_info['product_string'].lower():
+                try:
+                    # Open the device
+                    self.device = hid.device()
+                    self.device.open_path(device_info['path'])
+                    print(f"Device partially matched '{device_info['product_string']}' \
+                          and attached successfully as '{self.matching_key}'.")
+                    return True
+                except IOError as e:
+                    print(f"Failed to attach device: {e}")
+                    return False
+
+        print("Device not found that matches the partial name.")
+        return False
+
+    def select_device(self, device_name):
         """
-        Select device.
+        select device.
 
         Parameters:
             device_name (string): select the device with string
             containing "device name".
         """
-        self.Attached(device_name)
-        if type(self.Path) == bytes:
-            self.selectedDevice.close()
-            self.selectedDevice.open_path(self.Path)
-            self.selectedDevice.set_nonblocking(True)
+        self.attach_device(device_name)
+        if type(self.device) == bytes:
+            self.device.close()
+            self.device.open_path(self.device)
+            self.device.set_nonblocking(True)
         else:
-            self.selectedDevice = None
-        return self.selectedDevice
+            self.device = None
+        return self.device
+    
+    def close_device(self):
+        if self.device:
+            self.device.close()
 
-    def WaitForDigEvents(self, allowed_event_lines, timeout_ms):
+    def wait_for_event(self, allowed_event_lines, timeout_ms):
         """
         Wait for incoming digital events based on polling.
 
@@ -69,14 +73,14 @@ class EvtExchanger:
         Returns:
         """
         # flush the buffer!
-        while (self.selectedDevice.read(1) != []):
+        while (self.device.read(1) != []):
             continue
         if isinstance(timeout_ms, int):
             TimeoutSecs = timeout_ms / 1000
         startTime = time.time()
         while 1:
             elapsedSecs = (time.time()-startTime)
-            lastButton = self.selectedDevice.read(1)
+            lastButton = self.device.read(1)
             if (lastButton != []):
                 if (lastButton[0] & allowed_event_lines > 0):
                     break
@@ -88,7 +92,7 @@ class EvtExchanger:
                     break
         return lastButton[0], round(1000.0 * elapsedSecs)
 
-    def GetAxis(self):
+    def get_axis(self):
         """
         GetAxis data.
 
@@ -96,27 +100,36 @@ class EvtExchanger:
 
         Returns:
         """
-        while (self.selectedDevice.read(1) != []):
+        while (self.device.read(1) != []):
             pass
         time.sleep(.01)
-        valueList = self.selectedDevice.read(3)
+        valueList = self.device.read(3)
         if (valueList == []):
             return self.__AxisValue
         self.__AxisValue = valueList[1] + (256*valueList[2])
         return self.__AxisValue
 
     # Single command device functions:
-    def SetLines(self, output_value):
+    def write_lines(self, output_value):
         """
         Set output lines.
 
         Parameters:
             output_value: bit pattern [0-255] to set the digital output lines.
         """
-        self.selectedDevice.write(
-            [0, self.__SETOUTPUTLINES, output_value, 0, 0, 0, 0, 0, 0, 0, 0])
+        if self.device is None:
+            print("No device attached.")
+            return False
+        
+        try:
+            self.device.write(
+                [0, self.__SETOUTPUTLINES, output_value, 0, 0, 0, 0, 0, 0, 0, 0])
+            return True
+        except IOError as e:
+            print(f"Error in sending data: {e}")
+            return False
 
-    def PulseLines(self, output_value, duration_ms):
+    def pulse_lines(self, output_value, duration_ms):
         """
         Pulse output lines.
 
@@ -125,22 +138,22 @@ class EvtExchanger:
             digital output lines.
             duration_ms: sets the duration of the pulse.
         """
-        self.selectedDevice.write(
+        self.device.write(
             [0, self.__PULSEOUTPUTLINES, output_value, duration_ms & 255,
              duration_ms >> 8, 0, 0, 0, 0, 0, 0])
 
-    def SetAnalogEventStepSize(self, no_samples_per_step):
+    def set_analog_event_step_size(self, no_samples_per_step):
         """
         Set analog event step size.
 
         Parameters:
             no_samples_per_step: set the number of samples per step.
         """
-        self.selectedDevice.write(
+        self.device.write(
             [0, self.__SETANALOGEVENTSTEPSIZE, no_samples_per_step,
              0, 0, 0, 0, 0, 0, 0, 0])
 
-    def RENC_SetUp(self, encoder_range, min_value, position,
+    def renc_init(self, encoder_range, min_value, position,
                    input_change, pulse_input_divider):
         """
         Rotary Encoder setup.
@@ -153,24 +166,24 @@ class EvtExchanger:
             pulse_input_divider:
         """
         self.__AxisValue = position
-        self.selectedDevice.write(
+        self.device.write(
             [0, self.__SETUPROTARYCONTROLLER, encoder_range & 255,
              encoder_range >> 8, min_value & 255, min_value >> 8,
              position & 255, position >> 8,
              input_change, pulse_input_divider, 0])
 
-    def RENC_Setposition(self, position):
+    def renc_set_pos(self, position):
         """Rotary Encoder set position.
 
             Parameters:
                 position: Set the current position.
         """
         self.__AxisValue = position
-        self.selectedDevice.write(
+        self.device.write(
             [0, self.__SETROTARYCONTROLLERposition, position & 255,
              position >> 8, 0, 0, 0, 0, 0, 0, 0])
 
-    def SetLedColor(self, red_value, green_value, blue_value,
+    def set_led_rgb(self, red_value, green_value, blue_value,
                     led_number, mode):
         """Set LED color.
 
@@ -181,11 +194,11 @@ class EvtExchanger:
             led_number:
             mode:
         """
-        self.selectedDevice.write(
+        self.device.write(
             [0, self.__SETWS2811RGBLEDCOLOR, red_value, green_value,
              blue_value, led_number, mode, 0, 0, 0, 0])
 
-    def SendColors(self, number_of_leds, mode):
+    def send_led_rgb(self, number_of_leds, mode):
         """Set LED color.
 
         Parameters:
@@ -195,17 +208,19 @@ class EvtExchanger:
             led_number:
             mode:
         """
-        self.selectedDevice.write(
+        self.device.write(
             [0, self.__SENDLEDCOLORS, number_of_leds, mode,
              0, 0, 0, 0, 0, 0, 0])
 
-    def Reset(self):
+    def reset_device(self):
         """
         Reset EVT device. WARNING! Will disconnect the device from USB.
 
         """
-        self.selectedDevice.write(
+        self.device.write(
             [0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        if self.device:
+            self.device.close()
 
     __AxisValue = 0
 
