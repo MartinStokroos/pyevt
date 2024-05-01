@@ -6,16 +6,15 @@ from types import *
 import time
 
 
-class EVTDeviceHandler:
+class EventExchanger:
     """This class is to communicate with EVTx devices."""
 
-    def __init__(self, matching_key):
+    def __init__(self):
         self.device = None
-        self.matching_key = matching_key
 
-    def attach_device(self):
+    def attach(self, matching_key):
         """
-        Attach EVT hardware.
+        Attach EVT-device
 
         Parameters:
             matchingkey (string): attaches the available EVT2 device containing
@@ -23,42 +22,35 @@ class EVTDeviceHandler:
         """
         # Attempt to list all connected HID devices
         all_devices = hid.enumerate()
+        list_of_devices = []
 
         # Filter out the device by partial product name match
-        for device_info in all_devices:
-            if self.matching_key.lower() in device_info['product_string'].lower():
+        for d in all_devices:
+            if matching_key.lower() in d['product_string'].lower():
                 try:
                     # Open the device
                     self.device = hid.device()
-                    self.device.open_path(device_info['path'])
-                    print(f"Device partially matched '{device_info['product_string']}' \
-                          and attached successfully as '{self.matching_key}'.")
-                    return True
+                    self.device.open_path(d['path'])
+                    print(f"Device partially matched '{d['product_string']}' \
+                          and attached successfully as '{matching_key}'.")
+                    self.device.set_nonblocking(True)
+                    product_string = d["product_string"]
+                    device_alias = product_string[15:24] + " S/N #" + d["serial_number"]
+                    list_of_devices.append(device_alias)
+                    return list_of_devices
                 except IOError as e:
                     print(f"Failed to attach device: {e}")
                     return False
-
         print("Device not found that matches the partial name.")
         return False
 
-    def select_device(self, device_name):
+    def close(self):
         """
-        select device.
+        Close EVT device.
 
         Parameters:
-            device_name (string): select the device with string
-            containing "device name".
+            -
         """
-        self.attach_device(device_name)
-        if type(self.device) == bytes:
-            self.device.close()
-            self.device.open_path(self.device)
-            self.device.set_nonblocking(True)
-        else:
-            self.device = None
-        return self.device
-    
-    def close_device(self):
         if self.device:
             self.device.close()
 
@@ -72,25 +64,31 @@ class EVTDeviceHandler:
             timeout_ms: timeout period in ms. Set to None for infinite.
         Returns:
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+
+        if allowed_event_lines is not None:
+            bit_mask = int(allowed_event_lines)
+
+        t_start = time.time()
         # flush the buffer!
-        while (self.device.read(1) != []):
+        while (self.device.read(self.__RXBUFSIZE) != []):
             continue
-        if isinstance(timeout_ms, int):
-            TimeoutSecs = timeout_ms / 1000
-        startTime = time.time()
-        while 1:
-            elapsedSecs = (time.time()-startTime)
-            lastButton = self.device.read(1)
-            if (lastButton != []):
-                if (lastButton[0] & allowed_event_lines > 0):
+        # Blocking loop. read() itself is non-blocking.
+        while True:
+            last_event = self.device.read(self.__RXBUFSIZE)
+            t_elapsed = (time.time() - t_start) * 1000 # convert seconds to milliseconds
+            if (last_event != []):
+                if ((last_event[0] & bit_mask) > 0):
                     break
             # break for timeout:
-            if isinstance(timeout_ms, int):
-                if (elapsedSecs >= (TimeoutSecs)):
-                    lastButton = [-1]
-                    elapsedSecs = TimeoutSecs
+            if timeout_ms is not None:
+                if (t_elapsed >= int(timeout_ms)):
+                    last_event = [-1]
+                    # t_elapsted = timeout
                     break
-        return lastButton[0], round(1000.0 * elapsedSecs)
+        return last_event[0], round(t_elapsed)
 
     def get_axis(self):
         """
@@ -100,6 +98,10 @@ class EVTDeviceHandler:
 
         Returns:
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+
         while (self.device.read(1) != []):
             pass
         time.sleep(.01)
@@ -110,12 +112,12 @@ class EVTDeviceHandler:
         return self.__AxisValue
 
     # Single command device functions:
-    def write_lines(self, output_value):
+    def write_lines(self, value):
         """
         Set output lines.
 
         Parameters:
-            output_value: bit pattern [0-255] to set the digital output lines.
+            value: bit pattern [0-255] to set the digital output lines.
         """
         if self.device is None:
             print("No device attached.")
@@ -123,23 +125,27 @@ class EVTDeviceHandler:
         
         try:
             self.device.write(
-                [0, self.__SETOUTPUTLINES, output_value, 0, 0, 0, 0, 0, 0, 0, 0])
+                [0, self.__SETOUTPUTLINES, value, 0, 0, 0, 0, 0, 0, 0, 0])
             return True
         except IOError as e:
             print(f"Error in sending data: {e}")
             return False
 
-    def pulse_lines(self, output_value, duration_ms):
+    def pulse_lines(self, value, duration_ms):
         """
         Pulse output lines.
 
         Parameters:
-            output_value: bit pattern [0-255] to pulse the 
+            value: bit pattern [0-255] to pulse the 
             digital output lines.
             duration_ms: sets the duration of the pulse.
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+        
         self.device.write(
-            [0, self.__PULSEOUTPUTLINES, output_value, duration_ms & 255,
+            [0, self.__PULSEOUTPUTLINES, value, duration_ms & 255,
              duration_ms >> 8, 0, 0, 0, 0, 0, 0])
 
     def set_analog_event_step_size(self, no_samples_per_step):
@@ -149,6 +155,10 @@ class EVTDeviceHandler:
         Parameters:
             no_samples_per_step: set the number of samples per step.
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+        
         self.device.write(
             [0, self.__SETANALOGEVENTSTEPSIZE, no_samples_per_step,
              0, 0, 0, 0, 0, 0, 0, 0])
@@ -165,6 +175,10 @@ class EVTDeviceHandler:
             input_change:
             pulse_input_divider:
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+
         self.__AxisValue = position
         self.device.write(
             [0, self.__SETUPROTARYCONTROLLER, encoder_range & 255,
@@ -178,6 +192,10 @@ class EVTDeviceHandler:
             Parameters:
                 position: Set the current position.
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+
         self.__AxisValue = position
         self.device.write(
             [0, self.__SETROTARYCONTROLLERposition, position & 255,
@@ -194,6 +212,10 @@ class EVTDeviceHandler:
             led_number:
             mode:
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+
         self.device.write(
             [0, self.__SETWS2811RGBLEDCOLOR, red_value, green_value,
              blue_value, led_number, mode, 0, 0, 0, 0])
@@ -208,6 +230,10 @@ class EVTDeviceHandler:
             led_number:
             mode:
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+
         self.device.write(
             [0, self.__SENDLEDCOLORS, number_of_leds, mode,
              0, 0, 0, 0, 0, 0, 0])
@@ -217,14 +243,21 @@ class EVTDeviceHandler:
         Reset EVT device. WARNING! Will disconnect the device from USB.
 
         """
+        if self.device is None:
+            print("No device attached.")
+            return None
+
         self.device.write(
             [0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         if self.device:
             self.device.close()
 
+
     __AxisValue = 0
 
     # CONSTANTS:
+    __RXBUFSIZE = 1 # Receive buffer size=1
+
     __CLEAROUTPUTPORT = 0  # 0x00
     __SETOUTPUTPORT = 1  # 0x01
     __SETOUTPUTLINES = 2  # 0x02

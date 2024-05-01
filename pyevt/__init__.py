@@ -1,5 +1,5 @@
 """Python module to communicate with EVT-2 devices."""
 
-__version__ = '0.1.2'
+__version__ = '0.2.0'
 
-from .pyevt import EVTDeviceHandler
+from .pyevt import EventExchanger

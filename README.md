@@ -15,14 +15,17 @@ Install pyevt with:
 `pip install pyevt` or
 `pip install --user pyevt` on managed computers.
 
-## Example
+## Examples
 ```
-from pyevt import EvtExchanger
-myevt = EvtExchanger()
-myevt.Select("EventExchanger")
+from pyevt import EventExchanger
+myevt = EventExchanger() # create device handle
+myevt.attach('EventExchanger') # or 'EVT02', 'SHOCKER' or 'RSP-12', etc.
+myevt.write_lines(0) # reset outputs
+myevt.pulse_lines(170, 1000) # value=170, duration=1s
+myevt.close_evt() # remove device handle
 
-myevt.SetLines(0) # reset outputs
-myevt.PulseLines(170, 1000) # value=170, duration=1s
-
-del myevt # remove device handle
+# reconnect RSP-12
+myevt.attach('RSP-12')
+myevt.wait_for_event(3, None) # wait for button 1 OR 2, timeout is infinite.
+myevt.close_evt() # remove device handle
 ```
