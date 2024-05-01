@@ -12,7 +12,21 @@ class EventExchanger:
     def __init__(self):
         self.device = None
 
-    def attach(self, matching_key):
+    def evt_scan(self, matching_key="EventExchanger"):
+        # Attempt to list all connected EventExchanger HID devices
+        all_devices = hid.enumerate()
+        list_of_devices = []
+
+        # Filter out the device by partial product name match
+        for d in all_devices:
+            if matching_key.lower() in d['product_string'].lower():
+                device_id = d["product_string"] + d["serial_number"]
+                list_of_devices.append(device_id)
+            else:
+                print("Device not found that matches the partial name.")
+        return list_of_devices
+
+    def evt_attach(self, matching_key):
         """
         Attach EVT-device
 
@@ -44,15 +58,17 @@ class EventExchanger:
         print("Device not found that matches the partial name.")
         return False
 
-    def close(self):
+    def evt_close(self):
         """
-        Close EVT device.
+        Close the currently attached EVT device.
 
         Parameters:
             -
         """
         if self.device:
             self.device.close()
+        else:
+            print("No device found to close.")
 
     def wait_for_event(self, allowed_event_lines, timeout_ms):
         """
