@@ -7,7 +7,7 @@ import time
 
 
 class EventExchanger:
-    """This class is to communicate with EVTx devices."""
+    """This class is to communicate with EVT02 devices."""
 
     def __init__(self):
         self.device = None
@@ -22,19 +22,19 @@ class EventExchanger:
         """
         # Attempt to list all connected EventExchanger HID devices
         all_devices = hid.enumerate() # get list of dicts of each device 
-        selected_devices = [] # subset device list
+        list_of_selected_devices = [] # subset device list
 
         # Filter out the device by partial product name match
         for d in all_devices:
             if matching_key.lower() in d['product_string'].lower():
-                device_id = d["product_string"] + d["serial_number"]
-                selected_devices.append(device_id)
-                #selected_devices.append(d) # return a list of dicts
+                #device_id = d["product_string"] + d["serial_number"]
+                #selected_devices.append(device_id)
+                list_of_selected_devices.append(d) # returns a list of dicts
             else:
                 print("Device not found that matches the partial name.")
-        return selected_devices
+        return list_of_selected_devices
 
-    def attach(self, matching_key="EventExchanger"):
+    def attach_name(self, matching_key="EventExchanger"):
         """
         Attach EVT-device
 
@@ -52,14 +52,41 @@ class EventExchanger:
                     # Open the device
                     self.device = hid.device()
                     self.device.open_path(d['path'])
-                    print(f"Device id partially matched '{d['product_string']}' \
+                    print(f"Device id partially matched '{d['product_string']}' \r\n \
                           and attached successfully as '{matching_key}'.")
                     self.device.set_nonblocking(True)
                     return True
                 except IOError as e:
                     print(f"Failed to attach device: {e}")
                     return False
-        print("Device not found that matches the partial name.")
+        print("Device not found that matches the partial product name!")
+        return False
+
+    def attach_id(self, path):
+        """
+        Attach EVT-device
+
+        Parameters:
+            Attaches the available EVT-device containing
+            the 'path' string which is an unique ID.
+        """
+        # Attempt to list all connected HID devices
+        all_devices = hid.enumerate()
+
+        # Filter out the device by partial product name match
+        for d in all_devices:
+            if path in d['path']:
+                try:
+                    # Open the device
+                    self.device = hid.device()
+                    self.device.open_path(d['path'])
+                    print(f"Device attached successfully as '{d['product_string']}'.")
+                    self.device.set_nonblocking(True)
+                    return True
+                except IOError as e:
+                    print(f"Failed to attach device: {e}")
+                    return False
+        print("Device not found!")
         return False
 
     def close(self):
