@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import hid
-# import sys
+import logging, sys # simple log methods: debug, info, warning, error and critical
 from types import *
 import time
 
@@ -11,6 +11,9 @@ class EventExchanger:
 
     def __init__(self):
         self.device = None
+        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+    # DEVICE HANDLING ITEMS
 
     def scan(self, matching_key="EventExchanger"):
         """
@@ -18,29 +21,36 @@ class EventExchanger:
 
         Parameters:
             matchingkey (string): scans for the available EVT-devices containing
-            the matching_key string. The default will list all the EVT devices found.
+            the matching_key string. The default lists all EVT-devices found.
+            
+        Returns:
+            List of dicts of found devices.
         """
         # Attempt to list all connected EventExchanger HID devices
         all_devices = hid.enumerate() # get list of dicts of each device 
-        list_of_selected_devices = [] # subset device list
+        list_of_found_devices = [] # subset device list
 
         # Filter out the device by partial product name match
         for d in all_devices:
             if matching_key.lower() in d['product_string'].lower():
-                #device_id = d["product_string"] + d["serial_number"]
+                logging.info('Device found that matches the partial product \
+                name: %s and s/n:%s', d['product_string'], d['serial_number'])
                 #selected_devices.append(device_id)
-                list_of_selected_devices.append(d) # returns a list of dicts
+                list_of_found_devices.append(d) # returns a list of dicts
             else:
-                print("Device not found that matches the partial name.")
-        return list_of_selected_devices
+                logging.info('Device found that not matches the partial product name')
+        return list_of_found_devices
 
     def attach_name(self, matching_key="EventExchanger"):
         """
-        Attach EVT-device
+        Attach EVT-device on matching product name.
 
         Parameters:
             matchingkey (string): attaches the available EVT-device containing
             the matching_key string. The default is the first EVT device found.
+            
+        Returns:
+        
         """
         # Attempt to list all connected HID devices
         all_devices = hid.enumerate()
@@ -52,23 +62,26 @@ class EventExchanger:
                     # Open the device
                     self.device = hid.device()
                     self.device.open_path(d['path'])
-                    print(f"Device id partially matched '{d['product_string']}' \r\n \
-                          and attached successfully as '{matching_key}'.")
+                    logging.info('Device name partially matched %s \
+                    and attached successfully as: %s', matching_key, d['product_string'])
                     self.device.set_nonblocking(True)
                     return True
                 except IOError as e:
-                    print(f"Failed to attach device: {e}")
+                    logging.error('Failed to attach device!')
                     return False
-        print("Device not found that matches the partial product name!")
+        logging.info('Device found that not matches the partial product name')
         return False
 
     def attach_id(self, path):
         """
-        Attach EVT-device
+        Attach EVT-device on matching path id
 
         Parameters:
             Attaches the available EVT-device containing
-            the 'path' string which is an unique ID.
+            the 'path' binary, which is an unique ID.
+            
+        Returns:
+        
         """
         # Attempt to list all connected HID devices
         all_devices = hid.enumerate()
@@ -80,13 +93,13 @@ class EventExchanger:
                     # Open the device
                     self.device = hid.device()
                     self.device.open_path(d['path'])
-                    print(f"Device attached successfully as '{d['product_string']}'.")
+                    logging.info('Device attached successfully as %s', d['product_string'])
                     self.device.set_nonblocking(True)
                     return True
                 except IOError as e:
-                    print(f"Failed to attach device: {e}")
+                    logging.error('Failed to attach device!')
                     return False
-        print("Device not found!")
+        logging.warning('Device not found!')
         return False
 
     def close(self):
@@ -94,12 +107,36 @@ class EventExchanger:
         Close the currently attached EVT device.
 
         Parameters:
-            -
+            None
+            
+        Returns:
+        
         """
         if self.device:
             self.device.close()
+            logging.info('Device successfully detached.')
+            return True
         else:
-            print("No device found to close.")
+            logging.warning('No device found to close.')
+            return False
+            
+    def reset(self):
+        """
+        Reset EVT device. WARNING! Will disconnect the device from USB.
+
+        Returns:
+        
+        """
+        if self.device:
+            self.device.write([0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+            self.device.close()
+            logging.info('Device successfully reset and detached.')
+            return True
+        else:
+            logging.warning('No device attached.')
+            return False
+
+    # FUNCTIONAL ITEMS
 
     def wait_for_event(self, allowed_event_lines, timeout_ms):
         """
@@ -109,10 +146,12 @@ class EventExchanger:
             allowed_event_lines: bit mask [0-255] to select the
             digital input lines.
             timeout_ms: timeout period in ms. Set to None for infinite.
+            
         Returns:
+        
         """
         if self.device is None:
-            print("No device attached.")
+            logging.warning('No device attached.')
             return None
 
         if allowed_event_lines is not None:
@@ -141,12 +180,13 @@ class EventExchanger:
         """
         GetAxis data.
 
-        Parameters: -
+        Parameters: None
 
         Returns:
+        
         """
         if self.device is None:
-            print("No device attached.")
+            logging.warning('No device attached.')
             return None
 
         while (self.device.read(1) != []):
@@ -159,23 +199,27 @@ class EventExchanger:
         return self.__AxisValue
 
     # Single command device functions:
+    
     def write_lines(self, value):
         """
         Set output lines.
 
         Parameters:
             value: bit pattern [0-255] to set the digital output lines.
-        """
-        if self.device is None:
-            print("No device attached.")
-            return False
+            
+        Returns:
         
-        try:
-            self.device.write(
+        """
+        if self.device:
+            try:
+                self.device.write(
                 [0, self.__SETOUTPUTLINES, value, 0, 0, 0, 0, 0, 0, 0, 0])
-            return True
-        except IOError as e:
-            print(f"Error in sending data: {e}")
+                return True
+            except IOError as e:
+                logging.error('Error sending data!')
+                return False        
+        else:
+            logging.warning('No device attached.')
             return False
 
     def pulse_lines(self, value, duration_ms):
@@ -186,14 +230,39 @@ class EventExchanger:
             value: bit pattern [0-255] to pulse the 
             digital output lines.
             duration_ms: sets the duration of the pulse.
-        """
-        if self.device is None:
-            print("No device attached.")
-            return None
+
+        Returns:
         
-        self.device.write(
-            [0, self.__PULSEOUTPUTLINES, value, duration_ms & 255,
-             duration_ms >> 8, 0, 0, 0, 0, 0, 0])
+        """
+        if self.device:
+                    self.device.write(
+                    [0, self.__PULSEOUTPUTLINES, value, duration_ms & 255,
+                    duration_ms >> 8, 0, 0, 0, 0, 0, 0])
+        else:
+            logging.warning('No device attached.')
+            return True
+
+    def clear_lines(self):
+        """
+        Clear all output lines (set low).
+
+        Parameters:
+            None
+
+        Returns:
+
+        """
+        if self.device:
+            try:
+                self.device.write(
+                [0, self.__SETOUTPUTLINES, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+                return True
+            except IOError as e:
+                logging.error('Error sending data!')
+                return False
+        else:
+            logging.warning('No device attached.')
+            return False
 
     def set_analog_event_step_size(self, no_samples_per_step):
         """
@@ -201,14 +270,16 @@ class EventExchanger:
 
         Parameters:
             no_samples_per_step: set the number of samples per step.
+            
+        Returns:
         """
-        if self.device is None:
-            print("No device attached.")
-            return None
-        
-        self.device.write(
+        if self.device:
+            self.device.write(
             [0, self.__SETANALOGEVENTSTEPSIZE, no_samples_per_step,
-             0, 0, 0, 0, 0, 0, 0, 0])
+            0, 0, 0, 0, 0, 0, 0, 0])
+        else:
+            logging.warning('No device attached.')
+            return True
 
     def renc_init(self, encoder_range, min_value, position,
                    input_change, pulse_input_divider):
@@ -221,32 +292,40 @@ class EventExchanger:
             position:
             input_change:
             pulse_input_divider:
-        """
-        if self.device is None:
-            print("No device attached.")
-            return None
 
-        self.__AxisValue = position
-        self.device.write(
+        Returns:
+
+        """
+        if self.device:
+            self.__AxisValue = position
+            self.device.write(
             [0, self.__SETUPROTARYCONTROLLER, encoder_range & 255,
-             encoder_range >> 8, min_value & 255, min_value >> 8,
-             position & 255, position >> 8,
-             input_change, pulse_input_divider, 0])
+            encoder_range >> 8, min_value & 255, min_value >> 8,
+            position & 255, position >> 8,
+            input_change, pulse_input_divider, 0])
+            return True
+        else:
+            logging.warning('No device attached.')
+            return False
 
     def renc_set_pos(self, position):
         """Rotary Encoder set position.
 
             Parameters:
                 position: Set the current position.
-        """
-        if self.device is None:
-            print("No device attached.")
-            return None
 
-        self.__AxisValue = position
-        self.device.write(
+        Returns:
+
+        """
+        if self.device:
+            self.__AxisValue = position
+            self.device.write(
             [0, self.__SETROTARYCONTROLLERposition, position & 255,
-             position >> 8, 0, 0, 0, 0, 0, 0, 0])
+            position >> 8, 0, 0, 0, 0, 0, 0, 0])
+            return True
+        else:
+            logging.warning('No device attached.')
+            return False
 
     def set_led_rgb(self, red_value, green_value, blue_value,
                     led_number, mode):
@@ -258,14 +337,18 @@ class EventExchanger:
             blue_value:
             led_number:
             mode:
-        """
-        if self.device is None:
-            print("No device attached.")
-            return None
 
-        self.device.write(
+        Returns:
+
+        """
+        if self.device:
+            self.device.write(
             [0, self.__SETWS2811RGBLEDCOLOR, red_value, green_value,
-             blue_value, led_number, mode, 0, 0, 0, 0])
+            blue_value, led_number, mode, 0, 0, 0, 0])
+            return True
+        else:
+            logging.warning('No device attached.')
+            return False
 
     def send_led_rgb(self, number_of_leds, mode):
         """Set LED color.
@@ -276,29 +359,18 @@ class EventExchanger:
             blue_value:
             led_number:
             mode:
-        """
-        if self.device is None:
-            print("No device attached.")
-            return None
 
-        self.device.write(
-            [0, self.__SENDLEDCOLORS, number_of_leds, mode,
-             0, 0, 0, 0, 0, 0, 0])
-
-    def reset_device(self):
-        """
-        Reset EVT device. WARNING! Will disconnect the device from USB.
+        Returns:
 
         """
-        if self.device is None:
-            print("No device attached.")
-            return None
-
-        self.device.write(
-            [0, self.__RESET, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         if self.device:
-            self.device.close()
-
+            self.device.write(
+            [0, self.__SENDLEDCOLORS, number_of_leds, mode,
+            0, 0, 0, 0, 0, 0, 0])
+            return True
+        else:
+            logging.warning('No device attached.')
+            return False
 
     __AxisValue = 0
 
