@@ -33,12 +33,12 @@ class EventExchanger:
         # Filter out the device by partial product name match
         for d in all_devices:
             if matching_key.lower() in d['product_string'].lower():
-                logging.info('Device found that matches the partial product \
-                name: %s and s/n:%s', d['product_string'], d['serial_number'])
+                logging.info('Device found that partial matches the product \
+                name: %s, s/n: %s', d['product_string'], d['serial_number'])
                 #selected_devices.append(device_id)
                 list_of_found_devices.append(d) # returns a list of dicts
             else:
-                logging.info('Device found that not matches the partial product name')
+                logging.info('Device found that not partial matches the product name')
         return list_of_found_devices
 
     def attach_name(self, matching_key="EventExchanger"):
@@ -62,8 +62,9 @@ class EventExchanger:
                     # Open the device
                     self.device = hid.device()
                     self.device.open_path(d['path'])
-                    logging.info('Device name partially matched %s \
-                    and attached successfully as: %s', matching_key, d['product_string'])
+                    logging.info('Device name partially matches %s \
+                    and has been attached successfully as: %s, s/n: %s',
+                    d['product_string'], d['serial_number'])
                     self.device.set_nonblocking(True)
                     return True
                 except IOError as e:
@@ -93,7 +94,8 @@ class EventExchanger:
                     # Open the device
                     self.device = hid.device()
                     self.device.open_path(d['path'])
-                    logging.info('Device attached successfully as %s', d['product_string'])
+                    logging.info('Device attached successfully as: \
+                    %s, s/n: %s', d['product_string'], d['serial_number'])
                     self.device.set_nonblocking(True)
                     return True
                 except IOError as e:
