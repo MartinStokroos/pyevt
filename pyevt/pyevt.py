@@ -11,7 +11,8 @@ class EventExchanger:
 
     def __init__(self):
         self.device = None
-        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+        # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+        logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 
     # DEVICE HANDLING ITEMS
 
@@ -33,8 +34,9 @@ class EventExchanger:
         # Filter out the device by partial product name match
         for d in all_devices:
             if matching_key.lower() in d['product_string'].lower():
-                logging.info('Device found that partial matches the product \
-                name: %s, s/n: %s', d['product_string'], d['serial_number'])
+                logging.info(
+                'Device found that partial matches the product name: %s s/n: %s',
+                d['product_string'], d['serial_number'])
                 #selected_devices.append(device_id)
                 list_of_found_devices.append(d) # returns a list of dicts
             else:
@@ -62,8 +64,8 @@ class EventExchanger:
                     # Open the device
                     self.device = hid.device()
                     self.device.open_path(d['path'])
-                    logging.info('Device name partially matches %s \
-                    and has been attached successfully as: %s, s/n: %s',
+                    logging.info(
+                    'Device name partially matches %s and has been attached successfully as: %s s/n: %s',
                     d['product_string'], d['serial_number'])
                     self.device.set_nonblocking(True)
                     return True
@@ -75,7 +77,7 @@ class EventExchanger:
 
     def attach_id(self, path):
         """
-        Attach EVT-device on matching path id
+        Attach EVT-device on matching 'path' id which is unique.
 
         Parameters:
             Attaches the available EVT-device containing
@@ -94,8 +96,9 @@ class EventExchanger:
                     # Open the device
                     self.device = hid.device()
                     self.device.open_path(d['path'])
-                    logging.info('Device attached successfully as: \
-                    %s, s/n: %s', d['product_string'], d['serial_number'])
+                    logging.info(
+                    'Device attached successfully as: %s s/n: %s',
+                    d['product_string'], d['serial_number'])
                     self.device.set_nonblocking(True)
                     return True
                 except IOError as e:
