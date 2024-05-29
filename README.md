@@ -7,13 +7,13 @@ This repository contains the code to communicate with *EVT-2* USB-devices, devel
 The *EVT-2* is an event marking and triggering device intended for physiological experiments.
 *pyevt* is a Python module to communicate with *EVT-2* hardware (+derivatives).
 
-### Install
+## 2. Install
 Install pyevt with:
 
 `pip install pyevt` or
 `pip install --user pyevt` on managed computers.
 
-### Dependencies
+## 3. Dependencies
 *pyevt* uses the *HIDAPI* python module to communicate over USB according the HID class.
 ![https://pypi.org/project/hidapi/](https://pypi.org/project/hidapi/)
 
@@ -41,25 +41,32 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="1807", MODE="0660", GROUP="plugdev"
 
 The user should be member of the `plugdev` -group.
 
-### Code Examples
+## 4. Code Examples
 ```
 from pyevt import EventExchanger
-myevt = EventExchanger() # create device handle
-myevt.scan('partial_device_name') # Get list of devices containing partial string. Default is 'EventExchanger'.
+
+myevt = EventExchanger()
+# Get list of devices containing the partial string 'partial_device_name'.
+# The default is 'EventExchanger'.
+myevt.scan('partial_device_name') 
+
+# create the device handle:
 myevt.attach_name('partial_device_name') # Example: 'EVT02', 'SHOCKER' or 'RSP-12', etc. The default is 'EventExchanger'.
 
 myevt.write_lines(0) # clear outputs
 myevt.pulse_lines(170, 1000) # value=170, duration=1s
 
-myevt.close() # remove device handle
+# remove device handle
+myevt.close()
 
-# reconnect RSP-12
-myevt.attach('RSP-12')
+# connect RSP-12
+myevt.attach_name('RSP-12')
 myevt.wait_for_event(3, None) # wait for button 1 OR 2, timeout is infinite.
 myevt.close() # remove device handle
+
 ```
 
-## 2. LICENSE
+## 5. License
 The evt-plugins collection is distributed under the terms of the GNU General Public License 3.
 The full license should be included in the file COPYING, or can be obtained from
 
@@ -67,7 +74,7 @@ The full license should be included in the file COPYING, or can be obtained from
 
 This plugin collection contains the work of others.
 
-## 3. Documentation
+## 6. Documentation
 EVT-devices and plugin information:
 
 [https://markspan.github.io/evtplugins/](https://markspan.github.io/evtplugins/)
