@@ -14,10 +14,11 @@ Install pyevt with:
 `pip install --user pyevt` on managed computers.
 
 ## 3. Dependencies
-*pyevt* uses the *HIDAPI* python module to communicate over USB according the HID class.
+The *pyevt*-library uses the *HIDAPI* python module to communicate over USB according the HID class.
 ![https://pypi.org/project/hidapi/](https://pypi.org/project/hidapi/)
 
 - Linux
+
 In Linux (Ubuntu), permission for using EVT (HID) devices should be given by adding the next lines in a file, for example,  named: `99-evt-devices.rules` in `/etc/udev/rules.d`:
 
 ```
@@ -47,14 +48,13 @@ from pyevt import EventExchanger
 
 myevt = EventExchanger()
 # Get list of devices containing the partial string 'partial_device_name'.
-# The default is 'EventExchanger'.
-myevt.scan('partial_device_name') 
+myevt.scan('partial_device_name') # The default is 'EventExchanger'.
 
-# create the device handle:
+# Create a device handle:
 myevt.attach_name('partial_device_name') # Example: 'EVT02', 'SHOCKER' or 'RSP-12', etc. The default is 'EventExchanger'.
 
 myevt.write_lines(0) # clear outputs
-myevt.pulse_lines(170, 1000) # value=170, duration=1s
+myevt.pulse_lines(170, 1000) # value=170, duration=1000ms
 
 # remove device handle
 myevt.close()
