@@ -2,6 +2,7 @@
 __pycache__/
 *.bak
 *.txt
+pyproject.toml
 
 # Distribution packaging
 .pypirc
