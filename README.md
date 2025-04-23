@@ -17,9 +17,8 @@ Install pyevt with:
 The *pyevt*-library uses the *HIDAPI* python module to communicate over USB according the HID class.
 ![https://pypi.org/project/hidapi/](https://pypi.org/project/hidapi/)
 
-- Linux
-
-In Linux (Ubuntu), permission for using EVT (HID) devices should be given by adding the next lines in a file, for example,  named: `99-evt-devices.rules` in `/etc/udev/rules.d`:
+## 4. Device Permission for Linux
+In Linux (Ubuntu), permission for using EVT (HID) devices should be given by adding the next lines to a file, for example named: `99-evt-devices.rules` in `/etc/udev/rules.d`:
 
 ```
 # /etc/udev/rules.d/99-evt-devices.rules
@@ -40,9 +39,9 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="1803", MODE="0660", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTR{idVendor}=="1807", MODE="0660", GROUP="plugdev"
 ```
 
-The user should be member of the `plugdev` -group.
+The user should be a member of the `plugdev` -group.
 
-## 4. Code Examples
+## 5. Code Examples for Python
 ```
 from pyevt import EventExchanger
 
@@ -66,7 +65,7 @@ myevt.close() # remove device handle
 
 ```
 
-## 5. License
+## 6. License
 The evt-plugins collection is distributed under the terms of the GNU General Public License 3.
 The full license should be included in the file COPYING, or can be obtained from
 
@@ -74,7 +73,7 @@ The full license should be included in the file COPYING, or can be obtained from
 
 This plugin collection contains the work of others.
 
-## 6. Documentation
-EVT-devices and plugin information:
+## 7. Documentation
+Information about EVT-devices and OpenSesame plugins:
 
 [https://markspan.github.io/evtplugins/](https://markspan.github.io/evtplugins/)
