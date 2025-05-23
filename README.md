@@ -40,7 +40,6 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="1807", MODE="0660", GROUP="plugdev"
 
 The user should be a member of the `plugdev` -group.
 
-<<<<<<< HEAD
 Check with:
 
 `$ groups username`
@@ -49,12 +48,9 @@ If this is not the case, add the user to the plugdev group by typing:
 
 `$ sudo usermod -a -G plugdev username`
 
-## 4. Python coding examples
-```python
-=======
-## 5. Code Examples for Python
+## 5. Python coding examples
+
 ```
->>>>>>> 2d69f9210bc935e7df358068ebd8c1c21ec968c9
 from pyevt import EventExchanger
 
 myevt = EventExchanger()
