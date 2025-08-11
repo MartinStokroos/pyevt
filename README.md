@@ -1,7 +1,6 @@
-# pyevt - A python package for the Event-Exchanger EVT-2 USB hardware
+# pyevt - A python binder for the Event-Exchanger EVT-2 USB hardware
 
 ## 1. About
-
 This repository contains the code to communicate with *EVT-2* USB-devices, developed by the Research Support group of the faculty of Behavioral and Social Science from the University of Groningen. This code was originally written by Eise Hoekstra and Mark M. Span and is now maintained by Martin Stokroos
 
 The *EVT-2* is an event marking and triggering device intended for physiological experiments.
@@ -41,12 +40,21 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="1807", MODE="0660", GROUP="plugdev"
 
 The user should be a member of the `plugdev` -group.
 
-## 5. Code Examples for Python
+Check with:
+
+`$ groups username`
+
+If this is not the case, add the user to the plugdev group by typing:
+
+`$ sudo usermod -a -G plugdev username`
+
+## 5. Python coding examples
+
 ```
 from pyevt import EventExchanger
 
 myevt = EventExchanger()
-# Get list of devices containing the partial string 'partial_device_name'.
+# Get list of devices containing the partial string 'partial_device_name'
 myevt.scan('partial_device_name') # The default is 'EventExchanger'.
 
 # Create a device handle:
