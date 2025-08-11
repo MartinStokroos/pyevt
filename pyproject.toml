@@ -11,6 +11,12 @@ maintainers = [
 ]
 license = "GPL-3.0-or-later"
 readme = "README.md"
+keywords = ["evt", "api", "usb", "hid", "psychology", "response-box"]
+homepage = "https://github.com/MartinStokroos/pyevt"
+documentation = "https://github.com/MartinStokroos/pyevt/wiki"
+
+[tool.poetry.urls]
+Repository = "https://github.com/MartinStokroos/pyevt"
 
 [tool.poetry.dependencies]
 python = "^3.8"
