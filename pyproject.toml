@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyevt"
-version = "0.2.2"
+version = "0.2.0"
 description = "pyevt library for EVT-2 devices"
 authors = [
     "Eise Hoekstra <eise@example.com>",
