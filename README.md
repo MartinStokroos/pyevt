@@ -1,23 +1,22 @@
-# pyevt - A python binder for the Event-Exchanger EVT-2 USB hardware
+# pyevt - A Python API for the Event-Exchanger EVT-2 USB hardware
 
 ## 1. About
-This repository contains the code to communicate with *EVT-2* USB-devices, developed by the Research Support group of the faculty of Behavioral and Social Science from the University of Groningen. This code was originally written by Eise Hoekstra and Mark M. Span and is now maintained by Martin Stokroos
+This repository contains the API to communicate with *EVT-2* USB-devices (+derivatives) developed by the Research Support group of the faculty of Behavioral and Social Science from the University of Groningen. The *EVT-2* is a TTL event marking/TTL triggering device intended for computer-based psychology experiments.
 
-The *EVT-2* is an event marking and triggering device intended for physiological experiments.
-*pyevt* is a Python module to communicate with *EVT-2* hardware (+derivatives).
+## 2. Dependencies
+The *pyevt* API uses [HIDAPI](https://pypi.org/project/hidapi/), a cython module to communicate with HID-class USB devices.
 
-## 2. Install
-Install pyevt with:
+## 3. Install
+Install pyevt (and hidapi) with:
 
 `pip install pyevt` or
+
 `pip install --user pyevt` on managed computers.
 
-## 3. Dependencies
-The *pyevt*-library uses the *HIDAPI* python module to communicate over USB according the HID class.
-![https://pypi.org/project/hidapi/](https://pypi.org/project/hidapi/)
-
 ## 4. Device Permission for Linux
-In Linux (Ubuntu), permission for using EVT (HID) devices should be given by adding the next lines to a file, for example named: `99-evt-devices.rules` in `/etc/udev/rules.d`:
+Permission for using EVT (HID) devices should be given by adding the next lines to a file, for example named:
+
+`99-evt-devices.rules` in `/etc/udev/rules.d`:
 
 ```
 # /etc/udev/rules.d/99-evt-devices.rules
@@ -44,7 +43,7 @@ Check with:
 
 `$ groups username`
 
-If this is not the case, add the user to the plugdev group by typing:
+If this is not the case, add the user to the `plugdev` group by typing:
 
 `$ sudo usermod -a -G plugdev username`
 
