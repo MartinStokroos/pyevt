@@ -35,6 +35,7 @@ SUBSYSTEM=="usb", ATTR{idVendor}=="0808", MODE="0660", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTR{idVendor}=="0909", MODE="0660", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTR{idVendor}=="1803", MODE="0660", GROUP="plugdev"
 SUBSYSTEM=="usb", ATTR{idVendor}=="1807", MODE="0660", GROUP="plugdev"
+
 ```
 
 The user should be a member of the `plugdev` -group.
@@ -47,7 +48,52 @@ If this is not the case, add the user to the `plugdev` group by typing:
 
 `$ sudo usermod -a -G plugdev username`
 
-## 5. Python coding examples
+## 5. EventExchanger Class — API Summary
+
+**Device Management**
+
+| Method                                       | Description                                                                                                  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `scan(matching_key="EventExchanger")`        | Lists connected HID devices whose product name contains `matching_key`. Returns a list of device info dicts. |
+| `attach_name(matching_key="EventExchanger")` | Attaches the first device whose product name contains `matching_key`.                                        |
+| `attach_id(path)`                            | Attaches a device using its unique HID `path`.                                                               |
+| `close()`                                    | Closes the currently attached device.                                                                        |
+| `reset()`                                    | Sends a reset command to the device and disconnects it from USB.                                             |
+
+**Event & Data Retrieval**
+
+| Method                                            | Description                                                                                                                       |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `wait_for_event(allowed_event_lines, timeout_ms)` | Waits for digital input events matching the given bit mask. Returns `(event_code, elapsed_ms)`, or `(-1, elapsed_ms)` on timeout. |
+| `get_axis()`                                      | Reads the current axis position value from the device.                                                                            |
+
+**Digital Output Control**
+
+| Method                            | Description                                                     |
+| --------------------------------- | --------------------------------------------------------------- |
+| `write_lines(value)`              | Sets digital output lines to the specified bit pattern (0–255). |
+| `pulse_lines(value, duration_ms)` | Pulses output lines for the given duration in milliseconds (0-65535).     |
+| `clear_lines()`                   | Clears (sets low) all output lines.                             |
+
+
+**Analog & Encoder Control**
+
+| Method                                                                       | Description                               |
+| ---------------------------------------------------------------------------- | ----------------------------------------- |
+| `set_analog_event_step_size(samples_per_step)`                               | Configures analog event step size.        |
+| `renc_init(encoder_range, min_value, position, input_change, pulse_divider)` | Initializes rotary encoder parameters.    |
+| `renc_set_pos(position)`                                                     | Sets the current rotary encoder position. |
+
+
+**LED Control**
+
+| Method                                            | Description                         |
+| ------------------------------------------------- | ----------------------------------- |
+| `set_led_rgb(red, green, blue, led_number, mode)` | Sets RGB color for a specific LED.  |
+| `send_led_rgb(num_leds, mode)`                    | Sends LED color data to the device. |
+
+
+## 6. Python coding examples
 
 ```
 from pyevt import EventExchanger
@@ -65,14 +111,14 @@ myevt.pulse_lines(170, 1000) # value=170, duration=1000ms
 # remove device handle
 myevt.close()
 
-# connect RSP-12
+# connect RSP-12 button response box
 myevt.attach_name('RSP-12')
 myevt.wait_for_event(3, None) # wait for button 1 OR 2, timeout is infinite.
 myevt.close() # remove device handle
 
 ```
 
-## 6. License
+## 7. License
 The evt-plugins collection is distributed under the terms of the GNU General Public License 3.
 The full license should be included in the file COPYING, or can be obtained from
 
@@ -80,7 +126,7 @@ The full license should be included in the file COPYING, or can be obtained from
 
 This plugin collection contains the work of others.
 
-## 7. Documentation
+## 8. Other documentation
 Information about EVT-devices and OpenSesame plugins:
 
 [https://markspan.github.io/evtplugins/](https://markspan.github.io/evtplugins/)
