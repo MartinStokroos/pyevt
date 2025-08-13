@@ -119,12 +119,12 @@ myevt.close() # remove device handle
 ```
 
 ## 7. License
-The evt-plugins collection is distributed under the terms of the GNU General Public License 3.
+The pyevt API is distributed under the terms of the GNU General Public License 3.
 The full license should be included in the file COPYING, or can be obtained from
 
 [http://www.gnu.org/licenses/gpl.txt](http://www.gnu.org/licenses/gpl.txt)
 
-This plugin collection contains the work of others.
+The pyevt API contains the work of others.
 
 ## 8. Other documentation
 Information about EVT-devices and OpenSesame plugins:
